@@ -7,7 +7,7 @@ import (
 )
 
 type ProductDb struct {
-	db *sql.DB
+	Db *sql.DB
 }
 
 func NewProductDb(db *sql.DB) *ProductDb {
@@ -17,7 +17,7 @@ func NewProductDb(db *sql.DB) *ProductDb {
 func (db *ProductDb) Get(id string) (application.ProductInterface, error) {
 	var product application.Product
 
-	stmt, err := db.db.Prepare("select id, name, price, status from products where id=?")
+	stmt, err := db.Db.Prepare("select id, name, price, status from products where id=?")
 
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func (db *ProductDb) Get(id string) (application.ProductInterface, error) {
 }
 
 func (db *ProductDb) create(product application.ProductInterface) (application.ProductInterface, error) {
-	stmt, err := db.db.Prepare("INSERT INTO products(id, name, price, status) VALUES(?, ?, ?, ?);")
+	stmt, err := db.Db.Prepare("INSERT INTO products(id, name, price, status) VALUES(?, ?, ?, ?);")
 
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (db *ProductDb) create(product application.ProductInterface) (application.P
 }
 
 func (db *ProductDb) update(product application.ProductInterface) (application.ProductInterface, error) {
-	_, err := db.db.Exec(
+	_, err := db.Db.Exec(
 		"UPDATE products SET name = ?, price = ?, status = ? WHERE id = ?",
 		product.GetName(),
 		product.GetPrice(),
@@ -67,7 +67,11 @@ func (db *ProductDb) update(product application.ProductInterface) (application.P
 func (db *ProductDb) Save(product application.ProductInterface) (application.ProductInterface, error) {
 	var rows int
 
-	db.db.QueryRow("SELECT id FROM products WHERE id = ?", product.GetID()).Scan(&rows)
+	err := db.Db.QueryRow("SELECT count(id) FROM products WHERE id = ?", product.GetID()).Scan(&rows)
+
+	if err != nil {
+		return nil, err
+	}
 
 	if rows == 0 {
 		_, err := db.create(product)

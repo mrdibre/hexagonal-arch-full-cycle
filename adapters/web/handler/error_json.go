@@ -2,11 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 func jsonError(msg string) []byte {
 	e := struct {
-		message string `json:"message"`
+		Message string `json:"message"`
 	}{msg}
 
 	r, err := json.Marshal(e)
@@ -15,5 +16,6 @@ func jsonError(msg string) []byte {
 		return []byte(err.Error())
 	}
 
+	fmt.Println(e)
 	return r
 }
